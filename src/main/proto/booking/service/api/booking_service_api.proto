@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package booking.service.api;
+
+option java_outer_classname = "BookingServiceApi";
+
+import "kalix/annotations.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+message AddBookingCommand {
+  string booking_id = 1 [(kalix.field).entity_key = true];
+  string patient_id = 2;
+  string type = 3;
+  string date = 4;
+}
+
+message DeleteBookingCommand {
+  string booking_id = 1 [(kalix.field).entity_key = true];
+}
+
+message GetBookingRequest {
+  string booking_id = 1 [(kalix.field).entity_key = true];
+}
+
+message GetBookingDetails {
+  string booking_id = 1 [(kalix.field).entity_key = true];
+  string patient_id = 2;
+  string type = 3;
+  string date = 4;
+}
+
+service BookingService {
+  option (kalix.codegen) = {
+    event_sourced_entity: {
+      name: "booking.service.domain.Bookings"
+      entity_type: "booking"
+      state: "booking.service.domain.BookingState"
+      events: [
+        "booking.service.domain.BookingAdded",
+        "booking.service.domain.BookingRemoved"]
+    }
+  };
+
+  rpc CreateBooking(AddBookingCommand) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/patient/{patient_id}/bookings/add"
+      body: "*"
+    };
+  }
+
+  rpc DeleteBooking(DeleteBookingCommand) returns (google.protobuf.Empty) {
+    option (google.api.http).post = "/patient/bookings/{booking_id}/remove";
+  }
+
+  rpc GetBooking(GetBookingRequest) returns (GetBookingDetails) {
+    option (google.api.http) = {
+      get: "/bookings/{booking_id}"
+    };
+  }
+}

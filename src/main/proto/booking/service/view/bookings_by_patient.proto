@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package booking.service.view;
+
+import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
+import "kalix/annotations.proto";
+import "booking/service/api/booking_service_api.proto";
+import "booking/service/domain/booking_service_domain.proto";
+
+option java_outer_classname = "BookingsByPatientModel";
+
+message BookingsByPatientRequest {
+  string patient_id = 1;
+}
+
+message BookingsByPatientResponse {
+  repeated domain.BookingState bookings = 1;
+}
+service BookingsByPatient {
+  option (kalix.codegen) = {
+    view: {}
+  };
+
+
+  rpc GetBookingsByPatient(BookingsByPatientRequest) returns (BookingsByPatientResponse) {
+    option (kalix.method).view.query = {
+      query: "SELECT * AS bookings"
+          "  FROM bookings_by_patient"
+          " WHERE patient_id = :patient_id"
+          " ORDER BY date DESC"
+    };
+    option (google.api.http) = {
+      get: "/bookings-by-patient"
+    };
+  }
+
+  rpc OnBookingCreated(domain.BookingAdded) returns (domain.BookingState) {
+    option (kalix.method).eventing.in = {
+      event_sourced_entity: "booking"
+    };
+    option (kalix.method).view.update = {
+      table: "bookings_by_patient"
+      transform_updates: true
+    };
+  }
+
+  rpc OnBookingDeleted(domain.BookingRemoved) returns (domain.BookingState) {
+    option (kalix.method).eventing.in = {
+      event_sourced_entity: "booking"
+    };
+    option (kalix.method).view.update = {
+      table: "bookings_by_patient"
+      transform_updates: true
+    };
+  }
+}

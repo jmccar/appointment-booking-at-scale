@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package booking.service.domain;
+
+option java_outer_classname = "BookingServiceDomain";
+
+message BookingState {
+  string patient_id = 1;
+  string booking_id = 2;
+  string type = 3;
+  string date = 4;
+}
+
+message BookingAdded {
+  string patient_id = 1;
+  string booking_id = 2;
+  string type = 3;
+  string date = 4;
+}
+
+message BookingRemoved {
+  string booking_id = 1;
+}
